@@ -5,6 +5,9 @@ from src.daily_summary_builder import (
 )
 
 
+CHANGE_RATE_COLUMN = "\ub4f1\ub77d\ub960"
+
+
 class FakePykrxFrame:
     def __init__(self, rows):
         self.rows = rows
@@ -73,11 +76,67 @@ def test_summarize_relevant_text_returns_three_reason_focused_lines():
     ]
 
 
+def test_summarize_relevant_text_falls_back_to_candidate_titles():
+    stock = {
+        "code": "002780",
+        "name": "Jinheung Enterprise",
+        "market": "KOSPI",
+        "change_rate": 29.92,
+    }
+    documents = [
+        {
+            "title": "Shareholders ask what happens next",
+            "url": "https://finance.naver.com/item/board_read.naver?code=002780&nid=1",
+            "source_type": "comment",
+            "text": "",
+        },
+        {
+            "title": "Board users compare short-term views",
+            "url": "https://finance.naver.com/item/board_read.naver?code=002780&nid=2",
+            "source_type": "comment",
+            "text": "",
+        },
+    ]
+
+    result = summarize_relevant_text(stock, "comment", documents)
+
+    assert result == [
+        "Candidate comment: Shareholders ask what happens next",
+        "Candidate comment: Board users compare short-term views",
+        "No additional comment source was collected.",
+    ]
+
+
+def test_summarize_relevant_text_ignores_unreadably_long_page_text():
+    stock = {
+        "code": "002780",
+        "name": "Jinheung Enterprise",
+        "market": "KOSPI",
+        "change_rate": 29.92,
+    }
+    documents = [
+        {
+            "title": "Limit-up move draws investor attention",
+            "url": "https://finance.naver.com/item/board_read.naver?code=002780&nid=1",
+            "source_type": "comment",
+            "text": "Jinheung Enterprise " + ("navigation menu market data " * 40),
+        }
+    ]
+
+    result = summarize_relevant_text(stock, "comment", documents)
+
+    assert result == [
+        "Candidate comment: Limit-up move draws investor attention",
+        "No additional comment source was collected.",
+        "No additional comment source was collected.",
+    ]
+
+
 def test_summarize_daily_sources_fetches_bodies_and_groups_three_line_summaries():
     stock_api = FakePykrxStock(
         rows=[
-            ("005930", {"\ub4f1\ub77d\ub960": -8.2}),
-            ("111111", {"\ub4f1\ub77d\ub960": 3.0}),
+            ("005930", {CHANGE_RATE_COLUMN: -8.2}),
+            ("111111", {CHANGE_RATE_COLUMN: 3.0}),
         ],
         names={
             "005930": "Samsung Electronics",
@@ -91,7 +150,7 @@ def test_summarize_daily_sources_fetches_bodies_and_groups_three_line_summaries(
             return '<a href="/item/news_read.naver?article_id=1&code=005930">News title</a>'
         if "board.naver" in url:
             return '<a href="/item/board_read.naver?code=005930&nid=10">Comment title</a>'
-        if "coinfo.naver" in url:
+        if "company_list.naver" in url:
             return '<a href="/research/company_read.naver?nid=20">Research title</a>'
         return ""
 
