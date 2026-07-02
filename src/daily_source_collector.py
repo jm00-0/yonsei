@@ -53,6 +53,11 @@ def _collect_stock_sources(stock, html_fetcher, per_source_limit):
 def _fetch_html(url):
     import requests
 
-    response = requests.get(url, timeout=10)
+    response = requests.get(
+        url,
+        timeout=10,
+        headers={"User-Agent": "Mozilla/5.0"},
+    )
     response.raise_for_status()
+    response.encoding = response.apparent_encoding or response.encoding
     return response.text
