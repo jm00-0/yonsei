@@ -9,6 +9,18 @@
 - 찾은 리포트의 제목, 출처, 링크를 Gmail로 보냅니다.
 - 팀원별로 증권사/서비스 출처를 나누어 개발합니다.
 
+## 팀 가이드라인
+
+공통 작업 기준은 [Project Guidelines](docs/PROJECT_GUIDELINES.md)를 따릅니다.
+
+핵심 기준은 아래와 같습니다.
+
+- 대상 시장은 국내 KOSPI입니다.
+- 등락률 절댓값이 5% 이상인 종목 중 상위 10개를 고릅니다.
+- 각 종목은 리서치, 댓글, 뉴스로 나누어 각 3줄씩 요약합니다.
+- 결과는 날짜별 마크다운 폴더에 저장합니다.
+- 매일 오후 16:00 KST에 Gmail 뉴스레터를 발송합니다.
+
 ## 리포트 출처별 작업 브랜치
 
 | 담당 영역 | 브랜치 이름 | 설명 |
@@ -47,6 +59,9 @@ src/
 tests/
   test_stock_scanner.py
   test_report_sources.py
+reports/
+  YYYY-MM-DD/
+    index.md
 README.md
 requirements.txt
 ```
