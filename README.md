@@ -12,6 +12,8 @@
   - 댓글/투자자 반응 요약
   - 뉴스 요약
 - 결과는 `reports/YYYY-MM-DD/newsletter.md` 형식으로 저장합니다.
+- 메일 초안은 `reports/YYYY-MM-DD/gmail_draft.eml`로 저장합니다.
+- `gmail_draft.eml`에는 일반 텍스트와 HTML 뉴스레터 본문이 함께 들어갑니다.
 
 ## 파일 구조
 
@@ -23,7 +25,7 @@ src/
   comments.py          # 댓글/투자자 반응 자료 수집 보조 함수
   summarizer.py        # 3줄 요약과 실패 처리
   markdown_writer.py   # 날짜별 Markdown 뉴스레터 생성
-  gmail_sender.py      # Gmail 발송 전 검토용 초안 파일 생성
+  gmail_sender.py      # Gmail 발송 전 검토용 HTML 뉴스레터 초안 생성
   scheduler.py         # 매일 16:00 KST 실행 스케줄러
   main.py              # 전체 실행 진입점
 tests/
@@ -103,6 +105,8 @@ python -m src.main
 reports/YYYY-MM-DD/newsletter.md
 reports/YYYY-MM-DD/gmail_draft.eml
 ```
+
+`gmail_draft.eml` 파일을 메일 앱에서 열면 뉴스레터처럼 꾸며진 HTML 본문을 확인할 수 있습니다. 같은 파일 안에는 일반 텍스트 본문도 함께 들어 있어 HTML을 지원하지 않는 환경에서도 읽을 수 있습니다.
 
 ## 스케줄러 실행 방법
 
