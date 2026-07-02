@@ -15,9 +15,12 @@ jobs:
   send-newsletter:
     runs-on: ubuntu-latest
     env:
+      TZ: Asia/Seoul
       GMAIL_SENDER: ${{ secrets.GMAIL_SENDER }}
       GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
       NEWSLETTER_RECIPIENTS: ${{ secrets.NEWSLETTER_RECIPIENTS }}
+      KRX_ID: ${{ secrets.KRX_ID }}
+      KRX_PW: ${{ secrets.KRX_PW }}
 
     steps:
       - name: Check out repository
