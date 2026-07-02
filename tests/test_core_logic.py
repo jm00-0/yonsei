@@ -70,7 +70,7 @@ def test_write_newsletter_uses_dated_output_folder(tmp_path: Path):
 
 def test_email_draft_uses_environment_values_without_sending(tmp_path: Path):
     newsletter_path = tmp_path / "newsletter.md"
-    newsletter_path.write_text("본문", encoding="utf-8")
+    newsletter_path.write_text("# 제목\n\n## 종목\n\n### 뉴스 요약\n- 본문", encoding="utf-8")
     settings = GmailSettings(
         sender="ssou56@gmail.com",
         recipient="recipient@example.com",
@@ -84,7 +84,35 @@ def test_email_draft_uses_environment_values_without_sending(tmp_path: Path):
     assert draft.subject == "[2026-07-02] KOSPI 일일 리서치/뉴스레터"
     assert message["From"] == "ssou56@gmail.com"
     assert message["To"] == "recipient@example.com"
-    assert "본문" in message.get_content()
+    assert "본문" in message.get_body(("plain",)).get_content()
+
+
+def test_email_draft_contains_html_newsletter_body(tmp_path: Path):
+    newsletter_path = tmp_path / "newsletter.md"
+    newsletter_path.write_text(
+        "# 2026-07-02 KOSPI 일일 리서치/뉴스레터\n\n"
+        "## 1. 삼성전자 (005930) +5.25%\n\n"
+        "### 뉴스 요약\n"
+        "- 뉴스 첫 줄\n"
+        "- 뉴스 둘째 줄\n"
+        "- 뉴스 셋째 줄\n",
+        encoding="utf-8",
+    )
+    settings = GmailSettings(
+        sender="ssou56@gmail.com",
+        recipient="recipient@example.com",
+        credentials_path="credentials.json",
+        timezone="Asia/Seoul",
+    )
+
+    draft = build_email_draft(newsletter_path, date(2026, 7, 2), settings)
+    message = to_email_message(draft)
+    html = message.get_body(("html",)).get_content()
+
+    assert "text/html" in message.get_body(("html",)).get_content_type()
+    assert "KOSPI 일일 리서치/뉴스레터" in html
+    assert "뉴스 첫 줄" in html
+    assert "newsletter-card" in html
 
 
 def test_seconds_until_next_run_uses_next_day_after_1600():
