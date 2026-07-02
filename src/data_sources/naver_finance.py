@@ -9,9 +9,12 @@ def build_naver_finance_urls(code):
     stock_code = str(code).zfill(6)
     return {
         "main": f"{NAVER_FINANCE_BASE_URL}/item/main.naver?code={stock_code}",
-        "news": f"{NAVER_FINANCE_BASE_URL}/item/news.naver?code={stock_code}",
+        "news": f"{NAVER_FINANCE_BASE_URL}/item/news_news.naver?code={stock_code}&page=&clusterId=",
         "comment": f"{NAVER_FINANCE_BASE_URL}/item/board.naver?code={stock_code}",
-        "research": f"{NAVER_FINANCE_BASE_URL}/item/coinfo.naver?code={stock_code}",
+        "research": (
+            f"{NAVER_FINANCE_BASE_URL}/research/company_list.naver"
+            f"?searchType=itemCode&itemCode={stock_code}"
+        ),
     }
 
 
@@ -38,6 +41,7 @@ def parse_research_links(html, limit=None):
         html,
         source_type="research",
         allowed_path_fragments=("company_read.naver",),
+        base_url=f"{NAVER_FINANCE_BASE_URL}/research/",
         limit=limit,
     )
 
@@ -50,7 +54,13 @@ def collect_source_links_from_html(news_html="", comment_html="", research_html=
     ]
 
 
-def _parse_candidate_links(html, source_type, allowed_path_fragments, limit=None):
+def _parse_candidate_links(
+    html,
+    source_type,
+    allowed_path_fragments,
+    base_url=NAVER_FINANCE_BASE_URL,
+    limit=None,
+):
     parser = _AnchorParser()
     parser.feed(html or "")
 
@@ -67,7 +77,7 @@ def _parse_candidate_links(html, source_type, allowed_path_fragments, limit=None
         if not any(fragment in href for fragment in allowed_path_fragments):
             continue
 
-        normalized_url = urljoin(NAVER_FINANCE_BASE_URL, href)
+        normalized_url = urljoin(base_url, href)
         if normalized_url in seen_urls:
             continue
 
