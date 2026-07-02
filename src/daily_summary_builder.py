@@ -5,6 +5,7 @@ from src.daily_source_collector import collect_daily_sources
 
 
 SOURCE_TYPES = ("news", "comment", "research")
+MAX_SUMMARY_LINE_CHARS = 220
 REASON_KEYWORDS = (
     "earnings",
     "guidance",
@@ -81,6 +82,8 @@ def summarize_relevant_text(stock, source_type, documents, lines_per_type=3):
     for document in documents:
         text = document.get("text", "") or document.get("title", "")
         for sentence in _split_sentences(text):
+            if not _is_usable_summary_line(sentence):
+                continue
             score = _score_sentence(sentence, stock)
             if score > 0:
                 candidates.append((score, sentence))
@@ -96,8 +99,18 @@ def summarize_relevant_text(stock, source_type, documents, lines_per_type=3):
         if len(selected) == lines_per_type:
             break
 
+    if len(selected) < lines_per_type:
+        for candidate in _fallback_candidate_lines(source_type, documents):
+            normalized = candidate.casefold()
+            if normalized in seen:
+                continue
+            selected.append(candidate)
+            seen.add(normalized)
+            if len(selected) == lines_per_type:
+                break
+
     while len(selected) < lines_per_type:
-        selected.append(f"No additional {source_type} reason text was found.")
+        selected.append(f"No additional {source_type} source was collected.")
 
     return selected
 
@@ -176,11 +189,45 @@ def _split_sentences(text):
     return [sentence.strip() for sentence in rough_sentences if sentence.strip()]
 
 
+def _fallback_candidate_lines(source_type, documents):
+    lines = []
+    seen = set()
+
+    for document in documents:
+        candidate = document.get("title") or _first_sentence(document.get("text", ""))
+        candidate = " ".join((candidate or "").split())
+        if not candidate:
+            continue
+
+        normalized = candidate.casefold()
+        if normalized in seen:
+            continue
+
+        seen.add(normalized)
+        lines.append(f"Candidate {source_type}: {candidate}")
+
+    return lines
+
+
+def _is_usable_summary_line(text):
+    return len(text) <= MAX_SUMMARY_LINE_CHARS
+
+
+def _first_sentence(text):
+    sentences = _split_sentences(text or "")
+    return sentences[0] if sentences else ""
+
+
 def _fetch_html(url):
     import requests
 
-    response = requests.get(url, timeout=10)
+    response = requests.get(
+        url,
+        timeout=10,
+        headers={"User-Agent": "Mozilla/5.0"},
+    )
     response.raise_for_status()
+    response.encoding = response.apparent_encoding or response.encoding
     return response.text
 
 
