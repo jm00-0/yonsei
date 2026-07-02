@@ -1,6 +1,9 @@
 from src.daily_source_collector import collect_daily_sources
 
 
+CHANGE_RATE_COLUMN = "\ub4f1\ub77d\ub960"
+
+
 class FakePykrxFrame:
     def __init__(self, rows):
         self.rows = rows
@@ -24,9 +27,9 @@ class FakePykrxStock:
 def test_collect_daily_sources_fetches_naver_candidates_for_top_kospi_movers():
     stock_api = FakePykrxStock(
         rows=[
-            ("005930", {"등락률": 8.2}),
-            ("000660", {"등락률": -6.1}),
-            ("111111", {"등락률": 3.0}),
+            ("005930", {CHANGE_RATE_COLUMN: 8.2}),
+            ("000660", {CHANGE_RATE_COLUMN: -6.1}),
+            ("111111", {CHANGE_RATE_COLUMN: 3.0}),
         ],
         names={
             "005930": "Samsung Electronics",
@@ -43,7 +46,7 @@ def test_collect_daily_sources_fetches_naver_candidates_for_top_kospi_movers():
             return '<a href="/item/news_read.naver?article_id=1&code=005930">News item</a>'
         if "board.naver" in url:
             return '<a href="/item/board_read.naver?code=005930&nid=10">Comment item</a>'
-        if "coinfo.naver" in url:
+        if "company_list.naver" in url:
             return '<a href="/research/company_read.naver?nid=20">Research item</a>'
         return ""
 
@@ -62,9 +65,9 @@ def test_collect_daily_sources_fetches_naver_candidates_for_top_kospi_movers():
     }
     assert result[0]["urls"] == {
         "main": "https://finance.naver.com/item/main.naver?code=005930",
-        "news": "https://finance.naver.com/item/news.naver?code=005930",
+        "news": "https://finance.naver.com/item/news_news.naver?code=005930&page=&clusterId=",
         "comment": "https://finance.naver.com/item/board.naver?code=005930",
-        "research": "https://finance.naver.com/item/coinfo.naver?code=005930",
+        "research": "https://finance.naver.com/research/company_list.naver?searchType=itemCode&itemCode=005930",
     }
     assert [source["source_type"] for source in result[0]["sources"]] == [
         "news",
@@ -72,10 +75,10 @@ def test_collect_daily_sources_fetches_naver_candidates_for_top_kospi_movers():
         "research",
     ]
     assert fetched_urls == [
-        "https://finance.naver.com/item/news.naver?code=005930",
+        "https://finance.naver.com/item/news_news.naver?code=005930&page=&clusterId=",
         "https://finance.naver.com/item/board.naver?code=005930",
-        "https://finance.naver.com/item/coinfo.naver?code=005930",
-        "https://finance.naver.com/item/news.naver?code=000660",
+        "https://finance.naver.com/research/company_list.naver?searchType=itemCode&itemCode=005930",
+        "https://finance.naver.com/item/news_news.naver?code=000660&page=&clusterId=",
         "https://finance.naver.com/item/board.naver?code=000660",
-        "https://finance.naver.com/item/coinfo.naver?code=000660",
+        "https://finance.naver.com/research/company_list.naver?searchType=itemCode&itemCode=000660",
     ]
